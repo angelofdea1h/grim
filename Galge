@@ -1,0 +1,85 @@
+import random
+import time
+
+class GoldTradingBot:
+    def __init__(self):
+        self.balance = 10000  # Starting balance in USD
+        self.gold_price = 1800  # Example starting price for gold per ounce
+        self.gold_held = 0  # Amount of gold held in ounces
+        self.price_history = []
+
+    def get_market_data(self):
+        # Simulate price movements
+        self.gold_price += random.uniform(-10, 10)
+        self.price_history.append(self.gold_price)
+        return self.gold_price
+
+    def analyze_market(self):
+        # If not enough price history, we cannot analyze trends
+        if len(self.price_history) < 5:
+            return False
+        
+        # Analyze short-term and long-term trends
+        short_term_avg = sum(self.price_history[-3:]) / 3  # Last 3 values for short-term average
+        long_term_avg = sum(self.price_history[-10:]) / len(self.price_history[-10:])  # Last 10 values for long-term
+        
+        # A more realistic condition: Buy when short-term > long-term, Sell when short-term < long-term
+        return short_term_avg > long_term_avg
+
+    def alert_user(self):
+        if len(self.price_history) < 5:
+            return False
+        
+        short_term_avg = sum(self.price_history[-3:]) / 3
+        long_term_avg = sum(self.price_history[-10:]) / len(self.price_history[-10:])
+        
+        if short_term_avg > long_term_avg and self.analyze_market():
+            print("ALERT: Favorable conditions for entering a trade!")
+            return True
+        return False
+
+    def execute_trade(self, action, amount):
+        if action == "buy":
+            cost = amount * self.gold_price
+            if cost <= self.balance:
+                self.balance -= cost
+                self.gold_held += amount
+                print(f"Bought {amount} oz of gold at ${self.gold_price:.2f}/oz")
+            else:
+                print("Insufficient funds to execute buy order")
+        elif action == "sell":
+            if self.gold_held >= amount:
+                revenue = amount * self.gold_price
+                self.balance += revenue
+                self.gold_held -= amount
+                print(f"Sold {amount} oz of gold at ${self.gold_price:.2f}/oz")
+            else:
+                print("Insufficient gold to execute sell order")
+
+    def run(self, iterations):
+        for _ in range(iterations):
+            current_price = self.get_market_data()
+            
+            if self.alert_user():
+                if random.choice([True, False]):  # Randomly choose to buy or sell
+                    if self.balance >= self.gold_price:  # Only buy if we have enough balance
+                        self.execute_trade("buy", 1)
+                    else:
+                        print("Skipping buy due to insufficient funds")
+                else:
+                    if self.gold_held >= 1:  # Only sell if we have enough gold
+                        self.execute_trade("sell", 1)
+                    else:
+                        print("Skipping sell due to insufficient gold held")
+            else:
+                print("No trade executed this iteration")
+            
+            print(f"Current balance: ${self.balance:.2f}")
+            print(f"Gold held: {self.gold_held} oz")
+            print(f"Current gold price: ${current_price:.2f}/oz")
+            print("---")
+            time.sleep(0.5)  # Shortened sleep time for faster testing
+
+# Usage
+bot = GoldTradingBot()
+bot.run(20)  # Run for 20 iterations to see more potential alerts
